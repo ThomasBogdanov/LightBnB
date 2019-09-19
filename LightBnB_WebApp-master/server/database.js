@@ -116,7 +116,7 @@ const getAllProperties = function(options, limit = 10) {
 
   // 3
   if (options.city) {
-    queryParams.push(`%${options.city}%`);
+    queryParams.push(options.city);
     queryString += `WHERE city LIKE $${queryParams.length} `;
   }
 
@@ -135,13 +135,23 @@ const getAllProperties = function(options, limit = 10) {
     queryString += `AND cost_per_night <= $${queryParams.length}`
   }
 
-  // 4
-  queryParams.push(limit);
-  queryString += `
-  GROUP BY properties.id
-  ORDER BY cost_per_night
-  LIMIT $${queryParams.length};
-  `;
+
+
+
+if (options.minimum_rating) {
+  queryParams.push(options.minimum_rating);
+  queryString += `GROUP BY properties.id HAVING avg(property_reviews.rating) >= $${queryParams.length}`
+}
+
+if (!options.minimum_rating) {
+  queryString += `GROUP BY properties.id`
+}
+
+queryParams.push(limit);
+queryString += `
+ORDER BY cost_per_night
+LIMIT $${queryParams.length};
+`;
 
   // 5
   console.log(queryString, queryParams);
@@ -182,3 +192,19 @@ const addProperty = function(property) {
   return Promise.resolve(property);
 }
 exports.addProperty = addProperty;
+
+
+
+
+// if (options.minimum_rating) {
+//   queryParams.push(options.minimum_rating);
+//   queryString += `AND rating >= $${queryParams.length}`
+// }
+
+// // 4
+// queryParams.push(limit);
+// queryString += `
+// GROUP BY properties.id
+// ORDER BY cost_per_night
+// LIMIT $${queryParams.length};
+// `;
